@@ -2,6 +2,7 @@
 using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 
 namespace BasicFaceitServer.Events;
@@ -19,31 +20,23 @@ public class GameEvent(BasicFaceitServer core)
         core.RegisterEventHandler<EventRoundAnnounceWarmup>(OnRoundAnnounceWarmup);
         core.RegisterEventHandler<EventWarmupEnd>(OnWarmupEnd);
         core.RegisterEventHandler<EventRoundAnnounceMatchStart>(OnRoundAnnounceMatchStart);
-        core.RegisterEventHandler<EventBombPlanted>(OnEventBombPlanted);
-        core.RegisterEventHandler<EventPlayerDeath>(OnEventPlayerDeath);
+        core.RegisterEventHandler<EventCsWinPanelMatch>(OnEventCsWinPanelMatch);
+        core.RegisterEventHandler<EventTeamIntroStart>(OnEventTeamIntroStart, HookMode.Pre);
     }
 
-    private HookResult OnEventPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
+    private HookResult OnEventTeamIntroStart(EventTeamIntroStart @event, GameEventInfo info)
     {
-        var player = @event.Userid;
-        if (player == null || !player.IsValid || player.IsBot)
-        {
-            MyLogger.Debug($"Player is null or bot - {player?.IpAddress}");
-            return HookResult.Continue;
-        }
+        MyLogger.Info("OnEventTeamIntroStart");
+        info.DontBroadcast = true;
+        return HookResult.Changed;
+    }
 
-        if (_gameUtils.IsSleeping()) return HookResult.Continue;
+    private HookResult OnEventCsWinPanelMatch(EventCsWinPanelMatch @event, GameEventInfo info)
+    {
+        if (core.Maps is not { Length: > 1 }) return HookResult.Continue;
 
-        if (_gameUtils.IsMatchLive()) return HookResult.Continue;
-
-        if (_gameUtils.IsKnife()) return HookResult.Continue;
-
-        if (_gameUtils.IsWarmup())
-        {
-            _helper.RemoveGroundWeapons();
-            _helper.SetPlayerAccount(player, 16000);
-        }
-
+        core.GamePhase = GamePhase.Sleeping;
+        
         return HookResult.Continue;
     }
 
@@ -65,7 +58,7 @@ public class GameEvent(BasicFaceitServer core)
             foreach (var player in players)
                 _helper.PreparePlayerForKnifeRound(player);
 
-            _helper.PrintToChatAll("Пышақ роунды!!!");
+            _helper.PrintToChatAll("Pıshaq roundı!");
         }
         else if (_gameUtils.IsMatchLive() && players.Count >= core.Config.MinPlayerToStart)
         {
@@ -98,31 +91,40 @@ public class GameEvent(BasicFaceitServer core)
 
     private HookResult OnRoundAnnounceWarmup(EventRoundAnnounceWarmup @event, GameEventInfo info)
     {
+        var gameRules = _helper.GetGameRules();
+        if (gameRules != null)
+        {
+            core.GameListeners.WarmupStartTime = gameRules.WarmupPeriodStart;
+            core.GameListeners.WarmupEndTime = gameRules.WarmupPeriodEnd;
+            core.GameListeners.WarmupTime = core.Config.PreWarmupTime;
+            core.GameListeners.LastMessageTime = DateTime.Now.AddSeconds(-60);
+            core.GameListeners.LastWarmupEndValueCheckTime = DateTime.Now;
+        }
+        
         if (_gameUtils.IsPreWarmup()) return HookResult.Continue;
 
-        if (_gameUtils.IsPostWarmup())
-        {
-            MyLogger.Debug($"Post knife warmup period started");
+        if (!_gameUtils.IsPostWarmup()) return HookResult.Continue;
+        
+        MyLogger.Debug($"Post knife warmup period started");
 
-            var teamName1 = _gameController.Teams.Team1.Name;
-            var teamName2 = _gameController.Teams.Team2.Name;
-            MyLogger.Info($"Team name 1 - {teamName1}");
-            MyLogger.Info($"Team name 2 - {teamName2}");
+        var teamName1 = ConVar.Find("mp_teamname_1")?.StringValue ?? "Counter-Terrorist";
+        var teamName2 = ConVar.Find("mp_teamname_2")?.StringValue ?? "Terrorist";
+        MyLogger.Info($"Team name 1 - {teamName1}");
+        MyLogger.Info($"Team name 2 - {teamName2}");
 
-            var knifeWinner = _helper.GetKnifeWinnerTeam();
-            if (knifeWinner == CsTeam.None)
-                return HookResult.Continue;
+        var knifeWinner = _helper.GetKnifeWinnerTeam();
+        if (knifeWinner == CsTeam.None)
+            return HookResult.Continue;
 
-            var winnerTeamName = knifeWinner == CsTeam.CounterTerrorist
-                ? teamName1
-                : teamName2;
-            MyLogger.Debug($"Winner team name - {winnerTeamName}");
+        var winnerTeamName = knifeWinner == CsTeam.CounterTerrorist
+            ? teamName1
+            : teamName2;
+        MyLogger.Debug($"Winner team name - {winnerTeamName}");
 
-            _helper.PrintToChatAll($"{{green}}{winnerTeamName} {{white}}тəрепти таңлаң");
-            _helper.PrintToChatAll("{green}!ct {white}ямаса {green}!t {white}командасын жазың");
+        _helper.PrintToChatAll($"{{green}}{winnerTeamName} {{white}}tárepti tańlań");
+        _helper.PrintToChatAll("{green}!ct {white}yamasa {green}!t {white}komandasın jazıń");
 
-            MyLogger.Info($"Finish");
-        }
+        MyLogger.Info($"Finish");
 
         return HookResult.Continue;
     }
@@ -164,7 +166,10 @@ public class GameEvent(BasicFaceitServer core)
         if (_gameUtils.IsKnife())
         {
             MyLogger.Info($"Print knife round start message to each player");
-            _helper.PrintToCenterAll("Пышақ роунды басланды");
+            _helper.PrintToCenterAll("Pıshaq roundı baslandı");
+            _helper.PrintToChatAll("KNIFE!!!");
+            _helper.PrintToChatAll("KNIFE!!!");
+            _helper.PrintToChatAll("KNIFE!!!");
         }
 
         if (_gameUtils.IsMatchLive())
@@ -172,17 +177,6 @@ public class GameEvent(BasicFaceitServer core)
             MyLogger.Info($"Print Good luck message");
             _helper.PrintToChatAll("Ҳаммеге аўмет!!!");
         }
-
-        MyLogger.Info("End");
-        return HookResult.Continue;
-    }
-
-    private HookResult OnEventBombPlanted(EventBombPlanted @event, GameEventInfo info)
-    {
-        MyLogger.Info("Start");
-
-        info.DontBroadcast = true;
-        _helper.PrintToCenterAlertAll("Бомба койылды. Жарылыўына 40 секунд бар");
 
         MyLogger.Info("End");
         return HookResult.Continue;

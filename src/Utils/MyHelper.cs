@@ -9,18 +9,6 @@ namespace BasicFaceitServer.Utils;
 
 public class MyHelper(BasicFaceitServer core)
 {
-    private static readonly string[] WeaponsList =
-    {
-        "weapon_ak47", "weapon_aug", "weapon_awp", "weapon_bizon", "weapon_cz75a", "weapon_deagle", "weapon_elite",
-        "weapon_famas", "weapon_fiveseven", "weapon_g3sg1", "weapon_galilar",
-        "weapon_glock", "weapon_hkp2000", "weapon_m249", "weapon_m4a1", "weapon_m4a1_silencer", "weapon_mac10",
-        "weapon_mag7", "weapon_mp5sd", "weapon_mp7", "weapon_mp9", "weapon_negev",
-        "weapon_nova", "weapon_p250", "weapon_p90", "weapon_revolver", "weapon_sawedoff", "weapon_scar20",
-        "weapon_sg556", "weapon_ssg08", "weapon_tec9", "weapon_ump45", "weapon_usp_silencer", "weapon_xm1014",
-        "weapon_decoy", "weapon_flashbang", "weapon_hegrenade", "weapon_incgrenade", "weapon_molotov",
-        "weapon_smokegrenade", "item_defuser", "item_cutters", "weapon_knife"
-    };
-
     public void PrintToChat(CCSPlayerController player, string message)
     {
         var coloredText = $"{{green}}[{core.Config.Host}]{{white}}: {message}";
@@ -73,11 +61,7 @@ public class MyHelper(BasicFaceitServer core)
 
         var playerIp = playerIpAddress.Split(":")[0];
 
-        var isParticipant = configs.Cabins.Any(c =>
-            configs.LiveGame.Any(l => c.Id == l.CabinId)
-            && c.IpAddresses.Contains(playerIp)
-        );
-        MyLogger.Info($"The participant - {isParticipant}");
+        var isParticipant = configs.Cabins.Any(c => c.IpAddresses.Contains(playerIp));
         return isParticipant;
     }
 
@@ -96,31 +80,6 @@ public class MyHelper(BasicFaceitServer core)
             .ToList();
 
         return playerList;
-    }
-
-    public CsTeam GetPlayerTeam(CCSPlayerController player)
-    {
-        MyLogger.Info("Get client team (CT, T or Spectator)");
-        var configs = core.Config;
-        var playerIp = player.IpAddress?.Split(":")[0];
-
-        if (string.IsNullOrEmpty(playerIp))
-            return CsTeam.Spectator;
-
-        var cabin = configs.Cabins.FirstOrDefault(c => c.IpAddresses.Contains(playerIp));
-        if (cabin == null)
-            return CsTeam.Spectator;
-
-        var liveTeam = configs.LiveGame.FirstOrDefault(t => t.CabinId == cabin.Id);
-        if (liveTeam == null)
-            return CsTeam.Spectator;
-
-        return liveTeam.DefaultTeam switch
-        {
-            "CT" => CsTeam.CounterTerrorist,
-            "T" => CsTeam.Terrorist,
-            _ => CsTeam.Spectator
-        };
     }
 
     public void PlayerJoinTeam(CCSPlayerController player, CsTeam playerTeam)
@@ -183,21 +142,6 @@ public class MyHelper(BasicFaceitServer core)
         player.RemoveWeapons();
     }
 
-    public void RemoveGroundWeapons()
-    {
-        foreach (var weapons in WeaponsList)
-        {
-            foreach (var entity in Utilities.FindAllEntitiesByDesignerName<CBaseEntity>(weapons))
-            {
-                if (!entity.IsValid) continue;
-                if (entity.Entity == null) continue;
-                if (entity.OwnerEntity.IsValid) continue;
-
-                Server.NextFrame(() => { entity.AddEntityIOEvent("Kill", entity, null, "", 0.1f); });
-            }
-        }
-    }
-
     public void SetPlayerAccount(CCSPlayerController player, int amount)
     {
         MyLogger.Info($"Set player money to {amount}");
@@ -236,7 +180,7 @@ public class MyHelper(BasicFaceitServer core)
         return core.GameController.KnifeWinnerTeam;
     }
 
-    public string GetColoredText(string message)
+    private string GetColoredText(string message)
     {
         Dictionary<string, int> colorMap = new()
         {

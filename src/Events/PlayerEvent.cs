@@ -1,7 +1,9 @@
-﻿using BasicFaceitServer.GameStates;
+﻿using BasicFaceitServer.Events.DamageManagement;
+using BasicFaceitServer.GameStates;
 using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -13,16 +15,27 @@ public class PlayerEvent(BasicFaceitServer core)
     private readonly MyHelper _helper = core.Helper;
     private readonly GameController _gameController = core.GameController;
     private readonly GameUtils _gameUtils = core.GameUtils;
+    
+    //Shared API
+    private DamageManagementApi managementAPI { get; set; }
+    private static PluginCapability<IDamageManagementApi> DamageManagementCapability { get; } = new("damagemanagement:api");   
 
     public void Load()
     {
         core.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         core.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
-        core.RegisterEventHandler<EventSwitchTeam>(OnSwitchTeam);
-        core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam);
+        core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam, HookMode.Pre);
+
+        managementAPI = new DamageManagementApi();
+        Capabilities.RegisterPluginCapability(DamageManagementCapability, () => managementAPI);
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
 
         MyLogger.Info("Player events loaded");
+    }
+    
+    public void Unload()
+    {
+        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
     }
 
     private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
@@ -36,19 +49,27 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Continue;
         }
 
-        if (!_helper.CheckIpInParticipantsList(player.IpAddress))
+        var isParticipant = _helper.CheckIpInParticipantsList(player.IpAddress);
+        MyLogger.Debug($"Is player participant {isParticipant} - {player.IpAddress}.");
+        if (!isParticipant)
         {
-            MyLogger.Debug($"Player is not participant - {player.IpAddress}");
-            MyLogger.Debug($"Player team {CsTeam.Spectator}");
-            _helper.PlayerJoinTeam(player, CsTeam.Spectator);
+            MyLogger.Debug($"Player is not participant - {player.IpAddress}. Kicking");
+            _gameController.KickPlayer(player);
             return HookResult.Continue;
         }
 
+        var team = _gameUtils.GetPlayerTeam(player);
+        if (team is CsTeam.None)
+        {
+            MyLogger.Debug($"Player is not assigned to team - {player.IpAddress}. Kick player");
+            _gameController.KickPlayer(player);
+            return HookResult.Continue;
+        }
+        
         if (player.Team is CsTeam.Spectator or CsTeam.None)
         {
             MyLogger.Debug($"Player connecting first time. Assign team");
-            var playerTeam = _helper.GetPlayerTeam(player);
-            _helper.PlayerJoinTeam(player, playerTeam);
+            _gameController.PlayerJoinTeam(player, team);
         }
 
         var allPlayers = Utilities.GetPlayers();
@@ -75,11 +96,11 @@ public class PlayerEvent(BasicFaceitServer core)
 
         if (_gameUtils.IsPreWarmup())
         {
-            _helper.PrintToChat(player, "Пышақ роунды алдынан разминка!!!");
-            _helper.PrintToChat(player, "РАЗМИНКА!!!");
-            _helper.PrintToChat(player, "РАЗМИНКА!!!");
-            _helper.PrintToChat(player, "РАЗМИНКА!!!");
-            _helper.PrintToCenter(player, "Пышақ роунды алдынан разминка", 5.0f);
+            _helper.PrintToChat(player, "Oyın aldınan razminka!!!");
+            _helper.PrintToChat(player, "RAZMINKA!!!");
+            _helper.PrintToChat(player, "RAZMINKA!!!");
+            _helper.PrintToChat(player, "RAZMINKA!!!");
+            _helper.PrintToCenter(player, "Oyın aldınan razminka", 5.0f);
 
             return HookResult.Continue;
         }
@@ -119,36 +140,39 @@ public class PlayerEvent(BasicFaceitServer core)
         {
             info.DontBroadcast = true;
             MyLogger.Debug($"Player team is spectator");
-            return HookResult.Continue;
+            return HookResult.Changed;
         }
 
         MyLogger.Info($"Player team is not spectator");
-
-        return HookResult.Continue;
-    }
-
-    private HookResult OnSwitchTeam(EventSwitchTeam @event, GameEventInfo info)
-    {
-        // _helper.SetTeamName(_gameController.Teams.Team2, _gameController.Teams.Team1);
-        return HookResult.Continue;
+        return HookResult.Changed;
     }
 
     private HookResult OnTakeDamage(DynamicHook hook)
     {
+        //Check handle for API first
+        var executeOriginalMethod = managementAPI.IsNeedCallOriginalMethod();
+        //it will allow consumer determine execute original method or not
+        if (executeOriginalMethod)
+        {
+            return HookResult.Continue;
+        }
+        
+        if (_gameUtils.IsFriendlyFireShotOn()) return HookResult.Continue;
+        
         try
         {
             var victim = hook.GetParam<CEntityInstance>(0);
             var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
-
+    
             if (damageInfo.Attacker.Value == null) return HookResult.Continue;
-
+    
             var inflicter = damageInfo.Inflictor.Value?.DesignerName ?? "";
             var attackPlayer = new CCSPlayerPawn(damageInfo.Attacker.Value.Handle);
             var playerTakenDmg = new CCSPlayerController(victim.Handle);
-
+    
             if (attackPlayer.TeamNum != playerTakenDmg.TeamNum || !"player".Equals(victim.DesignerName))
-                return HookResult.Continue;
-
+                return HookResult.Continue; 
+            
             string[] enableDmgInflicter =
             [
                 "inferno", "hegrenade_projectile", "flashbang_projectile", "smokegrenade_projectile",
@@ -160,7 +184,7 @@ public class PlayerEvent(BasicFaceitServer core)
         {
             MyLogger.Error($"Error while shooting to player (OnTakeDamage) - {ex}");
         }
-
+    
         return HookResult.Continue;
     }
 }

@@ -49,18 +49,13 @@ public class ConfigManager(BasicFaceitServer core)
 
     public void ValidateConfigs()
     {
-        if (core.Config.Cabins is null || Config.Cabins.Length == 0)
-            throw new Exception("Cabins are null or empty");
+        if (core.Config.Cabins is null || core.Config.Cabins.Length == 0)
+            throw new Exception("Cabins are null or empty.");
         MyLogger.Info("Cabins are loaded");
 
         if (core.Config.Cabins.Any(cabin => cabin.IpAddresses.Length == 0))
-            throw new Exception("Cabin[i] ip_addresses is null or empty");
-        MyLogger.Info("Ip addresses are loaded");
-
-        if (core.Config.LiveGame is not { Length: 2 })
-            throw new Exception("Live game must have exactly two teams.");
-        MyLogger.Info("Live match is loaded");
-
-        MyLogger.Info("Configs validation passed");
+            throw new Exception("Cabin[i] ip_addresses is null or empty.");
+        MyLogger.Info("Ip addresses are loaded.");
+        MyLogger.Info("Configs validation passed.");
     }
 }

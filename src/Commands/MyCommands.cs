@@ -17,15 +17,22 @@ public class MyCommands(BasicFaceitServer core)
     {
         core.AddCommand("t", "Switch team to T", OnTCommand);
         core.AddCommand("ct", "Switch team to CT", OnCTCommand);
-        core.AddCommand("set_state", "Set game state", OnSetStateCommand);
-        core.AddCommand("print_state", "Print game slot", OnPrintStateCommand);
-        core.AddCommand("print_gr", "Print game rules", OnPrintGameRulesCommand);
+        core.AddCommand("css_set_gp", "Set game state", OnSetGamePhaseCommand);
+        core.AddCommand("css_get_gp", "Print game phase", OnGetGamePhaseCommand);
+        core.AddCommand("css_get_gr", "Print game rules", OnPrintGameRulesCommand);
     }
 
+    [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
     private void OnPrintGameRulesCommand(CCSPlayerController? player, CommandInfo commandInfo)
     {
         var gameRules = _helper.GetGameRules();
-        Console.WriteLine($"GamePhase: {gameRules!.GamePhase}");
+        MyLogger.Debug($"GamePhase: {gameRules!.GamePhase}");
+        MyLogger.Debug($"Current game state: {_game.GetCurrentGameState()}");
+        MyLogger.Debug($"WarmupPeriodStart: {gameRules.WarmupPeriodStart}");
+        MyLogger.Debug($"WarmupPeriodEnd: {gameRules.WarmupPeriodEnd}");
+        MyLogger.Debug($"Server Tick time: {Server.TickedTime}");
+        MyLogger.Debug($"Server Engine time: {Server.EngineTime}");
+        MyLogger.Debug($"Server Current time: {Server.CurrentTime}");
     }
     
     private void OnCTCommand(CCSPlayerController? player, CommandInfo command)
@@ -74,12 +81,12 @@ public class MyCommands(BasicFaceitServer core)
         MyLogger.Info($"On command execute: !t - End");
     }
 
-    private void OnPrintStateCommand(CCSPlayerController? player, CommandInfo command)
+    private void OnGetGamePhaseCommand(CCSPlayerController? player, CommandInfo command)
     {
         command.ReplyToCommand($"Current game state: {_game.GetCurrentGameState()}");
     }
     
-    private void OnSetStateCommand(CCSPlayerController? player, CommandInfo command)
+    private void OnSetGamePhaseCommand(CCSPlayerController? player, CommandInfo command)
     {
         var cmdArg = command.GetArg(1);
         switch (cmdArg)

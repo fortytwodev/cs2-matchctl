@@ -1,5 +1,6 @@
 ﻿using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
@@ -9,8 +10,6 @@ namespace BasicFaceitServer.GameStates;
 public class GameController(BasicFaceitServer core)
 {
     public CsTeam KnifeWinnerTeam = CsTeam.None;
-
-    public readonly Teams Teams = new();
     private readonly MyHelper _helper = core.Helper;
     private readonly GameUtils _game = core.GameUtils;
 
@@ -23,12 +22,24 @@ public class GameController(BasicFaceitServer core)
     public void StartPreKnifeWarmup()
     {
         MyLogger.Info("Start pre knife warmup phase");
+        string[] warmupCommands = [
+            $"mp_respawn_immunitytime 2",
+            $"mp_warmuptime {core.Config.PreWarmupTime}",
+            $"mp_warmup_items_drop_policy 0",
+            $"mp_warmup_items_nocost 1",
+            $"mp_warmup_items_nocount_policy 1",
+            $"mp_warmup_start"
+        ];
 
         MyLogger.Debug($"Post knife warmup time: {core.Config.PreWarmupTime}");
-        Server.ExecuteCommand($"mp_respawn_immunitytime 2");
-        Server.ExecuteCommand($"mp_warmuptime {core.Config.PreWarmupTime}");
-        Server.ExecuteCommand($"mp_warmup_start");
+        foreach (var cmd in warmupCommands)
+            Server.ExecuteCommand(cmd);
         UpdateGamePhase(GamePhase.PreKnifeWarmup);
+        
+        var gameRules = _helper.GetGameRules();
+        if (gameRules == null) return;
+        core.GameListeners.WarmupStartTime = gameRules.WarmupPeriodStart;
+        core.GameListeners.WarmupEndTime = gameRules.WarmupPeriodEnd;
     }
 
     public void StartKnife()
@@ -129,25 +140,25 @@ public class GameController(BasicFaceitServer core)
             showTime -= 1.0f;
         }, TimerFlags.REPEAT);
     }
-
-    public void StartNextMap()
+    
+    public void PlayerJoinTeam(CCSPlayerController player, CsTeam playerTeam)
     {
-        if (core.MapName == null)
+        MyLogger.Info($"Player team - {playerTeam.ToString()}");
+
+        core.AddTimer(0.1f, () =>
         {
-            core.MapName = core.Config.Maps[0];
-            MyLogger.Debug($"Map is null. Start new map - {core.MapName}");
-            Server.ExecuteCommand($"map {core.MapName}");
-        }
-        else
-        {
-            var currentIndex = Array.IndexOf(core.Config.Maps, core.MapName);
+            player.ChangeTeam(CsTeam.Spectator);
 
-            if (currentIndex + 1 >= core.Config.Maps.Length) return;
+            if (playerTeam == CsTeam.Spectator) return;
 
-            core.MapName = core.Config.Maps[currentIndex + 1];
+            player.Respawn();
+            core.AddTimer(0.1f, () => { player.ChangeTeam(playerTeam); });
+        });
+    }
 
-            MyLogger.Debug($"Start next map - {core.MapName}");
-            Server.ExecuteCommand($"changelevel {core.MapName}");
-        }
+    public void KickPlayer(CCSPlayerController player)
+    {
+        Server.ExecuteCommand($"kickid {player.UserId}");
+        MyLogger.Info($"Player kicked - {player.ToString()}");
     }
 }
