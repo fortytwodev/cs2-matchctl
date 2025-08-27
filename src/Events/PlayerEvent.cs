@@ -17,17 +17,17 @@ public class PlayerEvent(BasicFaceitServer core)
     private readonly GameUtils _gameUtils = core.GameUtils;
     
     //Shared API
-    private DamageManagementApi managementAPI { get; set; }
+    private DamageManagementApi ManagementApi { get; set; }
     private static PluginCapability<IDamageManagementApi> DamageManagementCapability { get; } = new("damagemanagement:api");   
 
     public void Load()
     {
         core.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         core.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
-        core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam, HookMode.Pre);
+        core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam);
 
-        managementAPI = new DamageManagementApi();
-        Capabilities.RegisterPluginCapability(DamageManagementCapability, () => managementAPI);
+        ManagementApi = new DamageManagementApi();
+        Capabilities.RegisterPluginCapability(DamageManagementCapability, () => ManagementApi);
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
 
         MyLogger.Info("Player events loaded");
@@ -49,39 +49,6 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Continue;
         }
 
-        var isParticipant = _helper.CheckIpInParticipantsList(player.IpAddress);
-        MyLogger.Debug($"Is player participant {isParticipant} - {player.IpAddress}.");
-        if (!isParticipant)
-        {
-            MyLogger.Debug($"Player is not participant - {player.IpAddress}. Kicking");
-            _gameController.KickPlayer(player);
-            return HookResult.Continue;
-        }
-
-        var team = _gameUtils.GetPlayerTeam(player);
-        if (team is CsTeam.None)
-        {
-            MyLogger.Debug($"Player is not assigned to team - {player.IpAddress}. Kick player");
-            _gameController.KickPlayer(player);
-            return HookResult.Continue;
-        }
-        
-        if (player.Team is CsTeam.Spectator or CsTeam.None)
-        {
-            MyLogger.Debug($"Player connecting first time. Assign team");
-            _gameController.PlayerJoinTeam(player, team);
-        }
-
-        var allPlayers = Utilities
-            .GetPlayers()
-            .Where(p => p.IsHLTV == false)
-            .ToList();
-        if (_gameUtils.IsPaused())
-        {
-            if (allPlayers.Count >= core.Config.MinPlayerToStart)
-                _gameController.UnpauseMatch();
-        }
-
         if (_gameUtils.IsMatchLive() || _gameUtils.IsPostWarmup())
             return HookResult.Continue;
 
@@ -89,25 +56,6 @@ public class PlayerEvent(BasicFaceitServer core)
         {
             _helper.PreparePlayerForKnifeRound(player);
             return HookResult.Handled;
-        }
-
-        MyLogger.Debug($"All players: {allPlayers.Count}");
-        MyLogger.Debug($"Is prewarmup: {_gameUtils.IsPreWarmup()}");
-        if (!_gameUtils.IsPreWarmup() && allPlayers.Count == 1)
-        {
-            MyLogger.Debug($"First player connected - {player.IpAddress}");
-            _gameController.StartPreKnifeWarmup();
-        }
-
-        if (_gameUtils.IsPreWarmup())
-        {
-            _helper.PrintToChatPlayer(player, "Oyın aldınan razminka!!!");
-            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
-            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
-            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
-            _helper.PrintToCenterPlayer(player, "Oyın aldınan razminka", 5.0f);
-
-            return HookResult.Continue;
         }
 
         MyLogger.Info($"Finish");
@@ -141,21 +89,37 @@ public class PlayerEvent(BasicFaceitServer core)
 
     private HookResult OnEventPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
     {
-        if (@event.Team == (byte)CsTeam.Spectator)
-        {
-            info.DontBroadcast = true;
-            MyLogger.Debug($"Player team is spectator");
-            return HookResult.Changed;
-        }
+        if (@event.Userid is null) return HookResult.Continue;
+        
+        MyLogger.Info($"Player - {@event.Userid.PlayerName}:{@event.Team}");
+        
+        var allPlayers = Utilities
+            .GetPlayers()
+            .Where(p => p is {IsHLTV: false, Team: not (CsTeam.None or CsTeam.Spectator)})
+            .ToList();
+        MyLogger.Debug($"Players count - {allPlayers.Count}");
 
-        MyLogger.Info($"Player team is not spectator");
-        return HookResult.Changed;
+        MyLogger.Debug($"Is pre warmup: {_gameUtils.IsPreWarmup()}");
+        if (_gameUtils.IsPreWarmup() || allPlayers.Count > 0) return HookResult.Continue;
+
+        MyLogger.Debug($"First player connected - {@event.Userid.PlayerName}:{@event.Team}");
+        _gameController.StartPreKnifeWarmup();
+
+        if (!_gameUtils.IsPreWarmup()) return HookResult.Continue;
+
+        _helper.PrintToChatPlayer(@event.Userid, "Oyın aldınan razminka!!!");
+        _helper.PrintToChatPlayer(@event.Userid, "RAZMINKA!!!");
+        _helper.PrintToChatPlayer(@event.Userid, "RAZMINKA!!!");
+        _helper.PrintToChatPlayer(@event.Userid, "RAZMINKA!!!");
+        _helper.PrintToCenterPlayer(@event.Userid, "Oyın aldınan razminka", 5.0f);
+
+        return HookResult.Continue;
     }
 
     private HookResult OnTakeDamage(DynamicHook hook)
     {
         //Check handle for API first
-        var executeOriginalMethod = managementAPI.IsNeedCallOriginalMethod();
+        var executeOriginalMethod = ManagementApi.IsNeedCallOriginalMethod();
         //it will allow consumer determine execute original method or not
         if (executeOriginalMethod)
         {

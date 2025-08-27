@@ -1,10 +1,9 @@
 ﻿using System.Text.Json;
-using BasicFaceitServer.Configs;
 using BasicFaceitServer.Utils;
 
-namespace BasicFaceitServer.Config;
+namespace BasicFaceitServer.Configs;
 
-public class ConfigManager(BasicFaceitServer core)
+public class ConfigManager
 {
     private const string ConfigPath = "configs.json";
 
@@ -45,17 +44,5 @@ public class ConfigManager(BasicFaceitServer core)
             MyLogger.Debug("Using defaults...");
             return new MyConfigs();
         }
-    }
-
-    public void ValidateConfigs()
-    {
-        if (core.Config.Cabins is null || core.Config.Cabins.Length == 0)
-            throw new Exception("Cabins are null or empty.");
-        MyLogger.Info("Cabins are loaded");
-
-        if (core.Config.Cabins.Any(cabin => cabin.IpAddresses.Length == 0))
-            throw new Exception("Cabin[i] ip_addresses is null or empty.");
-        MyLogger.Info("Ip addresses are loaded.");
-        MyLogger.Info("Configs validation passed.");
     }
 }

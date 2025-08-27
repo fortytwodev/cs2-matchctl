@@ -1,12 +1,9 @@
 using BasicFaceitServer.Commands;
-using BasicFaceitServer.Config;
 using BasicFaceitServer.Configs;
 using BasicFaceitServer.Events;
 using BasicFaceitServer.GameStates;
 using BasicFaceitServer.Utils;
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Cvars;
 
 namespace BasicFaceitServer;
 
@@ -33,12 +30,9 @@ public class BasicFaceitServer : BasePlugin
 
     private readonly ConfigManager _configManager;
     public MyConfigs Config { get; private set; } = new();
-
-    public bool MatchBeingPlayedIn = false;
-
     public BasicFaceitServer()
     {
-        _configManager = new ConfigManager(this);
+        _configManager = new ConfigManager();
         Helper = new MyHelper(this);
         GameUtils = new GameUtils(this);
         GameController = new GameController(this);
@@ -58,7 +52,6 @@ public class BasicFaceitServer : BasePlugin
         }
 
         Config = _configManager.GetConfig(ModuleDirectory);
-        _configManager.ValidateConfigs();
 
         PlayerEvents.Load();
         GameEvents.Load();

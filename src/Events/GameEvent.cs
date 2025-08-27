@@ -1,6 +1,5 @@
 ﻿using BasicFaceitServer.GameStates;
 using BasicFaceitServer.Utils;
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;

@@ -1,6 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using BasicFaceitServer.Configs;
-using BasicFaceitServer.GameStates;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -36,19 +34,6 @@ public class MyHelper(BasicFaceitServer core)
             player.PrintToCenter(message);
     }
 
-    public bool CheckIpInParticipantsList(string playerIpAddress)
-    {
-        MyLogger.Info($"Check if player in participants list - {playerIpAddress}");
-        if (playerIpAddress == "") return false;
-
-        var configs = core.Config;
-
-        var playerIp = playerIpAddress.Split(":")[0];
-
-        var isParticipant = configs.Cabins.Any(c => c.IpAddresses.Contains(playerIp));
-        return isParticipant;
-    }
-
     public List<CCSPlayerController> GetPlayers(CsTeam? includeTeam = null, bool includeSpec = false)
     {
         MyLogger.Info("Get players (CT, T)");
@@ -64,21 +49,6 @@ public class MyHelper(BasicFaceitServer core)
             .ToList();
 
         return playerList;
-    }
-
-    public void PlayerJoinTeam(CCSPlayerController player, CsTeam playerTeam)
-    {
-        MyLogger.Info($"Player team - {playerTeam.ToString()}");
-
-        core.AddTimer(0.1f, () =>
-        {
-            player.ChangeTeam(CsTeam.Spectator);
-
-            if (playerTeam == CsTeam.Spectator) return;
-
-            player.Respawn();
-            core.AddTimer(0.1f, () => { player.ChangeTeam(playerTeam); });
-        });
     }
 
     public void PreparePlayerForKnifeRound(CCSPlayerController player)

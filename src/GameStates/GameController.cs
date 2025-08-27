@@ -2,9 +2,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace BasicFaceitServer.GameStates;
 
@@ -13,8 +11,6 @@ public class GameController(BasicFaceitServer core)
     public CsTeam KnifeWinnerTeam = CsTeam.None;
     private readonly MyHelper _helper = core.Helper;
     private readonly GameUtils _game = core.GameUtils;
-
-    private Timer? _c4Countdown;
 
     public void Load()
     {
@@ -89,6 +85,8 @@ public class GameController(BasicFaceitServer core)
 
     public void StartRecordingGameDemo()
     {
+        if (!core.Config.RecordGameDemo) return;
+        
         MyLogger.Info("Start recording game");
 
         var team1 = ConVar.Find("mp_teamname_1")?.StringValue ?? "ct";
@@ -145,42 +143,9 @@ public class GameController(BasicFaceitServer core)
         MyLogger.Info("Match state updated");
     }
 
-    public void ShowOrganizerMessage()
-    {
-        core.MatchBeingPlayedIn = true;
-        var showTime = 10.0f;
-
-        _c4Countdown = core.AddTimer(1.0f, () =>
-        {
-            if (showTime <= 0)
-            {
-                core.MatchBeingPlayedIn = false;
-                _c4Countdown?.Kill();
-                return;
-            }
-
-            showTime -= 1.0f;
-        }, TimerFlags.REPEAT);
-    }
-    
-    public void PlayerJoinTeam(CCSPlayerController player, CsTeam playerTeam)
-    {
-        MyLogger.Info($"Player team - {playerTeam.ToString()}");
-
-        core.AddTimer(0.1f, () =>
-        {
-            player.ChangeTeam(CsTeam.Spectator);
-
-            if (playerTeam == CsTeam.Spectator) return;
-
-            player.Respawn();
-            core.AddTimer(0.1f, () => { player.ChangeTeam(playerTeam); });
-        });
-    }
-
     public void KickPlayer(CCSPlayerController player)
     {
         Server.ExecuteCommand($"kickid {player.UserId}");
-        MyLogger.Info($"Player kicked - {player.ToString()}");
+        MyLogger.Info($"Player kicked - {player.PlayerName}");
     }
 }
