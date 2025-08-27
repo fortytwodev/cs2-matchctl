@@ -9,20 +9,13 @@ namespace BasicFaceitServer.Utils;
 
 public class MyHelper(BasicFaceitServer core)
 {
-    public void PrintToChat(CCSPlayerController player, string message)
+    public void PrintToChatPlayer(CCSPlayerController player, string message)
     {
         var coloredText = $"{{green}}[{core.Config.Host}]{{white}}: {message}";
         player.PrintToChat(GetColoredText(coloredText));
     }
 
-    public void PrintToCenterHtmlAll(string message)
-    {
-        var players = GetPlayers();
-        foreach (var player in players)
-            Server.NextFrame(() => { player.PrintToCenterHtml(message, 10); });
-    }
-
-    public void PrintToCenter(CCSPlayerController player, string message, float delay = 0.0f)
+    public void PrintToCenterPlayer(CCSPlayerController player, string message, float delay = 0.0f)
     {
         if (delay > 0.0f)
             core.AddTimer(delay, () => player.PrintToCenter(message));
@@ -41,15 +34,6 @@ public class MyHelper(BasicFaceitServer core)
         var players = GetPlayers();
         foreach (var player in players)
             player.PrintToCenter(message);
-    }
-
-    public void PrintToCenterAlertAll(string message)
-    {
-        var players = GetPlayers(includeSpec: true);
-        foreach (var player in players)
-        {
-            Server.NextFrame(() => { player.PrintToCenterAlert(message); });
-        }
     }
 
     public bool CheckIpInParticipantsList(string playerIpAddress)

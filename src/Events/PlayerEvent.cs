@@ -101,11 +101,11 @@ public class PlayerEvent(BasicFaceitServer core)
 
         if (_gameUtils.IsPreWarmup())
         {
-            _helper.PrintToChat(player, "Oyın aldınan razminka!!!");
-            _helper.PrintToChat(player, "RAZMINKA!!!");
-            _helper.PrintToChat(player, "RAZMINKA!!!");
-            _helper.PrintToChat(player, "RAZMINKA!!!");
-            _helper.PrintToCenter(player, "Oyın aldınan razminka", 5.0f);
+            _helper.PrintToChatPlayer(player, "Oyın aldınan razminka!!!");
+            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
+            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
+            _helper.PrintToChatPlayer(player, "RAZMINKA!!!");
+            _helper.PrintToCenterPlayer(player, "Oyın aldınan razminka", 5.0f);
 
             return HookResult.Continue;
         }
