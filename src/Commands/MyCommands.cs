@@ -1,4 +1,5 @@
-﻿using BasicFaceitServer.GameStates;
+﻿using System.Text.RegularExpressions;
+using BasicFaceitServer.GameStates;
 using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -12,7 +13,7 @@ public class MyCommands(BasicFaceitServer core)
     private readonly GameController _gameController = core.GameController;
     private readonly GameUtils _game = core.GameUtils;
     private readonly MyHelper _helper = core.Helper;
-    
+
     public void Load()
     {
         core.AddCommand("t", "Switch team to T", OnTCommand);
@@ -20,10 +21,55 @@ public class MyCommands(BasicFaceitServer core)
         core.AddCommand("css_set_gp", "Set game state", OnSetGamePhaseCommand);
         core.AddCommand("css_get_gp", "Print game phase", OnGetGamePhaseCommand);
         core.AddCommand("css_get_gr", "Print game rules", OnPrintGameRulesCommand);
+        core.AddCommand("css_get_cabins", "Get team cabin names", OnGetCabinNamesCommand);
+        core.AddCommand("css_set_cabins", "Set team cabins", OnSetCabinNamesCommand);
+        core.AddCommand("css_knife", "Enable or disable knife round", OnKnifeRoundCommand);
+    }
+
+    private void OnKnifeRoundCommand(CCSPlayerController? player, CommandInfo command)
+    {
+        var cmdArg = command.GetArg(1);
+
+        switch (cmdArg)
+        {
+            case "0":
+                core.Config.KnifeRoundEnabled = false;
+                command.ReplyToCommand("Knife round disabled");
+                break;
+            case "1":
+                core.Config.KnifeRoundEnabled = true;
+                command.ReplyToCommand("Knife round enabled");
+                break;
+            default:
+                command.ReplyToCommand("Wrong format");
+                return;
+        }
+    }
+
+    private void OnSetCabinNamesCommand(CCSPlayerController? player, CommandInfo command)
+    {
+        var cmdArg = command.GetArg(1);
+
+        const string pattern = @"^[^\s]+\/[^\s]+$";
+        if (!Regex.IsMatch(cmdArg, pattern))
+        {
+            command.ReplyToCommand("Invalid format (name1/name2)");
+            return;
+        }
+
+        var cabinNames = cmdArg.Split('/');
+        core.TeamCabin1 = cabinNames[0];
+        core.TeamCabin2 = cabinNames[1];
+        command.ReplyToCommand("Set cabin names");
+    }
+
+    private void OnGetCabinNamesCommand(CCSPlayerController? player, CommandInfo command)
+    {
+        command.ReplyToCommand($"{core.TeamCabin1}/{core.TeamCabin2}");
     }
 
     [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-    private void OnPrintGameRulesCommand(CCSPlayerController? player, CommandInfo commandInfo)
+    private void OnPrintGameRulesCommand(CCSPlayerController? player, CommandInfo command)
     {
         var gameRules = _helper.GetGameRules();
         MyLogger.Debug($"GamePhase: {gameRules!.GamePhase}");
@@ -34,7 +80,7 @@ public class MyCommands(BasicFaceitServer core)
         MyLogger.Debug($"Server Engine time: {Server.EngineTime}");
         MyLogger.Debug($"Server Current time: {Server.CurrentTime}");
     }
-    
+
     private void OnCTCommand(CCSPlayerController? player, CommandInfo command)
     {
         MyLogger.Info("On command execute: !ct - Start");
@@ -44,40 +90,40 @@ public class MyCommands(BasicFaceitServer core)
         if (player == null || !player.IsValid) return;
 
         var knifeWinnerTeam = _helper.GetKnifeWinnerTeam();
-        
+
         MyLogger.Debug($"On command execute: !ct - Player team: {player.Team}");
         if (player.Team != knifeWinnerTeam || player.Team == CsTeam.Spectator) return;
-        
+
         var gameRules = _helper.GetGameRules();
-        
+
         gameRules!.SwapTeamsOnRestart = player.Team == CsTeam.Terrorist;
         gameRules.WarmupPeriod = false;
-        
+
         _gameController.StartMatch();
-        
+
         MyLogger.Info($"On command execute: !ct - End");
     }
 
     private void OnTCommand(CCSPlayerController? player, CommandInfo command)
     {
         MyLogger.Info($"On command execute: !t - Start");
-        
+
         if (_game.IsMatchLive()) return;
 
         if (player == null || !player.IsValid) return;
 
         var knifeWinnerTeam = _helper.GetKnifeWinnerTeam();
-        
+
         MyLogger.Debug($"On command execute: !t - Player team: {player.Team}");
         if (player.Team != knifeWinnerTeam || player.Team == CsTeam.Spectator) return;
-        
+
         var gameRules = _helper.GetGameRules();
-        
+
         gameRules!.SwapTeamsOnRestart = player.Team == CsTeam.CounterTerrorist;
         gameRules.WarmupPeriod = false;
-        
+
         _gameController.StartMatch();
-        
+
         MyLogger.Info($"On command execute: !t - End");
     }
 
@@ -85,13 +131,13 @@ public class MyCommands(BasicFaceitServer core)
     {
         command.ReplyToCommand($"Current game state: {_game.GetCurrentGameState()}");
     }
-    
+
     private void OnSetGamePhaseCommand(CCSPlayerController? player, CommandInfo command)
     {
         var cmdArg = command.GetArg(1);
         switch (cmdArg)
         {
-            case "prewarmup":
+            case "warmup":
                 command.ReplyToCommand("Pre warmup state set");
                 _gameController.StartPreKnifeWarmup();
                 break;

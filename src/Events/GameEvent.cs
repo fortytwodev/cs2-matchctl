@@ -33,10 +33,11 @@ public class GameEvent(BasicFaceitServer core)
 
     private HookResult OnEventCsWinPanelMatch(EventCsWinPanelMatch @event, GameEventInfo info)
     {
-        if (core.Maps is not { Length: > 1 }) return HookResult.Continue;
-
         core.GamePhase = GamePhase.Sleeping;
-        
+        core.AddTimer(5.0f, () =>
+        {
+            _gameController.StopRecordingGameDemo();
+        });
         return HookResult.Continue;
     }
 
@@ -144,8 +145,11 @@ public class GameEvent(BasicFaceitServer core)
                 _gameController.PauseMatch();
             }
 
-            _gameController.StartKnife();
-
+            if (core.Config.KnifeRoundEnabled)
+                _gameController.StartKnife();
+            else
+                _gameController.StartMatch();
+            
             return HookResult.Continue;
         }
 
@@ -175,7 +179,7 @@ public class GameEvent(BasicFaceitServer core)
         if (_gameUtils.IsMatchLive())
         {
             MyLogger.Info($"Print Good luck message");
-            _helper.PrintToChatAll("Ҳаммеге аўмет!!!");
+            _helper.PrintToChatAll("Hámmege áwmet!!!");
         }
 
         MyLogger.Info("End");

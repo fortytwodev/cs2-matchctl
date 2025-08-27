@@ -61,7 +61,7 @@ public class GameUtils(BasicFaceitServer core)
         return core.Config.Cabins.Any(c => c.Name == code);
     }
 
-    public bool IsFriendlyFireShotOn()
+    public bool IsFriendlyFireOn()
     {
         return core.Config.IsFriendlyFireShotOn;
     }
@@ -84,21 +84,15 @@ public class GameUtils(BasicFaceitServer core)
         var cabin1 = core.TeamCabin1;
         var cabin2 = core.TeamCabin2;
         MyLogger.Debug($"1.{cabin1}, 2.{cabin2} - Player cabin - {cabin.Name}");
-        
-        string? defaultTeam = null;
+            
+        var defaultTeam = CsTeam.None;
         if (cabin.Name == cabin1)
-            defaultTeam = "CT";
+            defaultTeam = CsTeam.CounterTerrorist;
         else if (cabin.Name == cabin2)
-            defaultTeam = "T";
+            defaultTeam = CsTeam.Terrorist;
         else if (cabin.Name == "spec")
-            defaultTeam = "spec";
+            defaultTeam = CsTeam.Spectator;
 
-        return defaultTeam switch
-        {
-            "CT" => CsTeam.CounterTerrorist,
-            "T" => CsTeam.Terrorist,
-            "spec" => CsTeam.Spectator,
-            _ => CsTeam.None
-        };
+        return defaultTeam;
     }
 }

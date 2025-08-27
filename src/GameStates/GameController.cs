@@ -1,6 +1,7 @@
 ﻿using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
@@ -82,7 +83,28 @@ public class GameController(BasicFaceitServer core)
         }
 
         Server.ExecuteCommand("exec gamemode_competitive; mp_restartgame 1;");
+        StartRecordingGameDemo();
         UpdateGamePhase(GamePhase.MatchLive);
+    }
+
+    public void StartRecordingGameDemo()
+    {
+        MyLogger.Info("Start recording game");
+
+        var team1 = ConVar.Find("mp_teamname_1")?.StringValue ?? "ct";
+        var team2 = ConVar.Find("mp_teamname_2")?.StringValue ?? "t";
+        var mapName = Server.MapName;
+        var todayDate = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
+        var demoFilename = $"{team1}_vs_{team2}_{mapName}_{todayDate}";
+        
+        MyLogger.Info($"Demo filename: {demoFilename}");
+        Server.ExecuteCommand($"tv_record {demoFilename}");
+    }
+
+    public void StopRecordingGameDemo()
+    {
+        MyLogger.Info("Stop recording game");
+        Server.ExecuteCommand("tv_stoprecord");
     }
 
     public void PauseMatch()
