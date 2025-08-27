@@ -30,18 +30,11 @@ public class BasicFaceitServer : BasePlugin
 
     public string TeamCabin1 = "";
     public string TeamCabin2 = "";
-    public string[]? Maps = [];
 
     private readonly ConfigManager _configManager;
     public MyConfigs Config { get; private set; } = new();
 
     public bool MatchBeingPlayedIn = false;
-
-    public FakeConVar<string> TeamCabinName1 = new("css_teamcabin_1", "First team cabin name", "Empty",
-        ConVarFlags.FCVAR_SERVER_CAN_EXECUTE);
-
-    public FakeConVar<string> TeamCabinName2 = new("css_teamcabin_2", "Second team cabin name", "Empty",
-        ConVarFlags.FCVAR_SERVER_CAN_EXECUTE);
 
     public BasicFaceitServer()
     {
@@ -73,19 +66,12 @@ public class BasicFaceitServer : BasePlugin
         Commands.Load();
         GameListeners.Load();
 
-        TeamCabinName1.ValueChanged += (sender, value) => { TeamCabin1 = value; };
-
-        TeamCabinName2.ValueChanged += (sender, value) => { TeamCabin2 = value; };
-
-        RegisterFakeConVars(typeof(ConVar));
-
         MyLogger.Info("End plugin load");
     }
 
     public override void Unload(bool hotReload)
     {
         PlayerEvents.Unload();
-        Maps = null;
         GamePhase = GamePhase.Sleeping;
     }
 }
