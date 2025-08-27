@@ -72,7 +72,10 @@ public class PlayerEvent(BasicFaceitServer core)
             _gameController.PlayerJoinTeam(player, team);
         }
 
-        var allPlayers = Utilities.GetPlayers();
+        var allPlayers = Utilities
+            .GetPlayers()
+            .Where(p => p.IsHLTV == false)
+            .ToList();
         if (_gameUtils.IsPaused())
         {
             if (allPlayers.Count >= core.Config.MinPlayerToStart)
@@ -88,6 +91,8 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Handled;
         }
 
+        MyLogger.Debug($"All players: {allPlayers.Count}");
+        MyLogger.Debug($"Is prewarmup: {_gameUtils.IsPreWarmup()}");
         if (!_gameUtils.IsPreWarmup() && allPlayers.Count == 1)
         {
             MyLogger.Debug($"First player connected - {player.IpAddress}");
@@ -157,7 +162,7 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Continue;
         }
         
-        if (_gameUtils.IsFriendlyFireShotOn()) return HookResult.Continue;
+        if (_gameUtils.IsFriendlyFireOn()) return HookResult.Continue;
         
         try
         {
