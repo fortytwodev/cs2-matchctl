@@ -78,12 +78,12 @@ public class GameController(BasicFaceitServer core)
             gameRules!.WarmupPeriod = false;
         }
 
-        Server.ExecuteCommand("exec gamemode_competitive; mp_restartgame 1;");
+        Server.ExecuteCommand("exec gamemode_competitive; sv_disable_teamselect_menu 1; mp_restartgame 1;");
         StartRecordingGameDemo();
         UpdateGamePhase(GamePhase.MatchLive);
     }
 
-    public void StartRecordingGameDemo()
+    private void StartRecordingGameDemo()
     {
         if (!core.Config.RecordGameDemo) return;
         

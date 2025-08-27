@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using BasicFaceitServer.GameStates;
+﻿using BasicFaceitServer.GameStates;
 using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -21,8 +20,6 @@ public class MyCommands(BasicFaceitServer core)
         core.AddCommand("css_set_gp", "Set game state", OnSetGamePhaseCommand);
         core.AddCommand("css_get_gp", "Print game phase", OnGetGamePhaseCommand);
         core.AddCommand("css_get_gr", "Print game rules", OnPrintGameRulesCommand);
-        core.AddCommand("css_get_cabins", "Get team cabin names", OnGetCabinNamesCommand);
-        core.AddCommand("css_set_cabins", "Set team cabins", OnSetCabinNamesCommand);
         core.AddCommand("css_knife", "Enable or disable knife round", OnKnifeRoundCommand);
     }
 
@@ -44,28 +41,6 @@ public class MyCommands(BasicFaceitServer core)
                 command.ReplyToCommand("Wrong format");
                 return;
         }
-    }
-
-    private void OnSetCabinNamesCommand(CCSPlayerController? player, CommandInfo command)
-    {
-        var cmdArg = command.GetArg(1);
-
-        const string pattern = @"^[^\s]+\/[^\s]+$";
-        if (!Regex.IsMatch(cmdArg, pattern))
-        {
-            command.ReplyToCommand("Invalid format (name1/name2)");
-            return;
-        }
-
-        var cabinNames = cmdArg.Split('/');
-        core.TeamCabin1 = cabinNames[0];
-        core.TeamCabin2 = cabinNames[1];
-        command.ReplyToCommand("Set cabin names");
-    }
-
-    private void OnGetCabinNamesCommand(CCSPlayerController? player, CommandInfo command)
-    {
-        command.ReplyToCommand($"{core.TeamCabin1}/{core.TeamCabin2}");
     }
 
     [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
@@ -157,7 +132,6 @@ public class MyCommands(BasicFaceitServer core)
                 break;
             default:
                 command.ReplyToCommand("Incorrect command");
-                Console.WriteLine("Incorrect state");
                 return;
         }
     }

@@ -25,11 +25,9 @@ public class BasicFaceitServer : BasePlugin
     public GamePhase GamePhase = GamePhase.Sleeping;
     public MatchState MatchState = MatchState.Live;
 
-    public string TeamCabin1 = "";
-    public string TeamCabin2 = "";
-
     private readonly ConfigManager _configManager;
     public MyConfigs Config { get; private set; } = new();
+
     public BasicFaceitServer()
     {
         _configManager = new ConfigManager();
