@@ -44,7 +44,7 @@ public class GameListener(BasicFaceitServer core)
                 if (leftTime % 60 == 0 && leftTime / 60 > 0)
                 {
                     var minutes = leftTime / 60;
-                    core.Helper.PrintToChatAll($"{{red}}Oyın baslanıwına {minutes} minut qaldı");
+                    core.Helper.PrintToChatAll($"{{green}}Oyın baslanıwına {minutes} minut qaldı");
                     LastMessageTime = DateTime.Now;
                 }
             }

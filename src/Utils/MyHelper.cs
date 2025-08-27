@@ -70,9 +70,9 @@ public class MyHelper(BasicFaceitServer core)
         MyLogger.Info("Get players (CT, T)");
 
         var playerList = Utilities
-            .FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller")
+            .GetPlayers()
             .Where(player =>
-                player is { IsValid: true, IsBot: false }
+                player is { IsValid: true, IsBot: false, IsHLTV: false}
                 && (includeTeam == null || player.Team == includeTeam)
                 && player.Team != CsTeam.None
                 && (includeSpec || player.Team != CsTeam.Spectator)
