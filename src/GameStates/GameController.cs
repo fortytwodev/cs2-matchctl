@@ -25,7 +25,8 @@ public class GameController(BasicFaceitServer core)
             $"mp_warmup_items_drop_policy 0",
             $"mp_warmup_items_nocost 1",
             $"mp_warmup_items_nocount_policy 1",
-            $"mp_warmup_start"
+            $"mp_warmup_start",
+            $"sv_disable_teamselect_menu 0"
         ];
 
         MyLogger.Debug($"Post knife warmup time: {core.Config.PreWarmupTime}");
@@ -78,7 +79,11 @@ public class GameController(BasicFaceitServer core)
             gameRules!.WarmupPeriod = false;
         }
 
-        Server.ExecuteCommand("exec gamemode_competitive; sv_disable_teamselect_menu 1; mp_restartgame 1;");
+        Server.ExecuteCommand("exec gamemode_competitive;");
+        core.AddTimer(1.0f, () =>
+        {
+            Server.ExecuteCommand("sv_disable_teamselect_menu 1;");
+        });
         StartRecordingGameDemo();
         UpdateGamePhase(GamePhase.MatchLive);
     }

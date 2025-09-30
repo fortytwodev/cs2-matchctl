@@ -4,6 +4,7 @@ using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -25,6 +26,7 @@ public class PlayerEvent(BasicFaceitServer core)
         core.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         core.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam);
+        core.RegisterEventHandler<EventPlayerChat>(OnEventPlayerChat);
 
         ManagementApi = new DamageManagementApi();
         Capabilities.RegisterPluginCapability(DamageManagementCapability, () => ManagementApi);
@@ -32,7 +34,15 @@ public class PlayerEvent(BasicFaceitServer core)
 
         MyLogger.Info("Player events loaded");
     }
-    
+
+    private HookResult OnEventPlayerChat(EventPlayerChat @event, GameEventInfo info)
+    {
+        var text = @event.Text;
+        var isAll = @event.Teamonly;
+        MyLogger.Info($"{isAll}: {text}");
+        return HookResult.Continue;
+    }
+
     public void Unload()
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
