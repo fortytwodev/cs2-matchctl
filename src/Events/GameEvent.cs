@@ -59,6 +59,8 @@ public class GameEvent(BasicFaceitServer core)
                 _helper.PreparePlayerForKnifeRound(player);
 
             _helper.PrintToChatAll("Pıshaq roundı!");
+            _helper.PrintToChatAll("{red}DĺQQAT!!! {green}Friendly fire qosılǵan");
+            _helper.PrintToChatAll("{green}Eger oyınshı  bilep-bilmey, pıshaq roundı yamasa janlı oyın (game) waqtında komandalasına zálel jetkerse, oyın qayta baslanbaydı (restart berilmeydi).");
         }
         else if (_gameUtils.IsMatchLive() && players.Count >= core.Config.MinPlayerToStart)
         {
@@ -101,10 +103,8 @@ public class GameEvent(BasicFaceitServer core)
             core.GameListeners.LastWarmupEndValueCheckTime = DateTime.Now;
         }
         
-        if (_gameUtils.IsPreWarmup()) return HookResult.Continue;
+        if (_gameUtils.IsPreWarmup() || !_gameUtils.IsPostWarmup()) return HookResult.Continue;
 
-        if (!_gameUtils.IsPostWarmup()) return HookResult.Continue;
-        
         MyLogger.Debug($"Post knife warmup period started");
 
         var teamName1 = ConVar.Find("mp_teamname_1")?.StringValue ?? "Counter-Terrorist";
@@ -121,7 +121,7 @@ public class GameEvent(BasicFaceitServer core)
             : teamName2;
         MyLogger.Debug($"Winner team name - {winnerTeamName}");
 
-        _helper.PrintToChatAll($"{{green}}{winnerTeamName} {{white}}tárepti tańlań");
+        _helper.PrintToChatAll($"{{white}}Utqan komanda tárepti tańlań");
         _helper.PrintToChatAll("{green}!ct {white}yamasa {green}!t {white}komandasın jazıń");
 
         MyLogger.Info($"Finish");

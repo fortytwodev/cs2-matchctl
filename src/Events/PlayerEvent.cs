@@ -28,9 +28,9 @@ public class PlayerEvent(BasicFaceitServer core)
         core.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam);
         core.RegisterEventHandler<EventPlayerChat>(OnEventPlayerChat);
 
-        ManagementApi = new DamageManagementApi();
-        Capabilities.RegisterPluginCapability(DamageManagementCapability, () => ManagementApi);
-        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
+        // ManagementApi = new DamageManagementApi();
+        // Capabilities.RegisterPluginCapability(DamageManagementCapability, () => ManagementApi);
+        // VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
 
         MyLogger.Info("Player events loaded");
     }
@@ -45,7 +45,7 @@ public class PlayerEvent(BasicFaceitServer core)
 
     public void Unload()
     {
-        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
+        // VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
     }
 
     private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
