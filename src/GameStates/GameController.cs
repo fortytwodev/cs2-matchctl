@@ -26,7 +26,7 @@ public class GameController(BasicFaceitServer core)
             $"mp_warmup_items_nocost 1",
             $"mp_warmup_items_nocount_policy 1",
             $"mp_warmup_start",
-            $"sv_disable_teamselect_menu 0"
+            $"sv_disable_teamselect_menu 1"
         ];
 
         MyLogger.Debug($"Post knife warmup time: {core.Config.PreWarmupTime}");
@@ -49,7 +49,7 @@ public class GameController(BasicFaceitServer core)
             gameRules!.WarmupPeriod = false;
         }
 
-        Server.ExecuteCommand("mp_give_player_c4 0");
+        Server.ExecuteCommand("mp_give_player_c4 0; sv_disable_teamselect_menu 1;");
 
         UpdateGamePhase(GamePhase.Knife);
     }
@@ -82,7 +82,7 @@ public class GameController(BasicFaceitServer core)
         Server.ExecuteCommand("exec gamemode_competitive;");
         core.AddTimer(1.0f, () =>
         {
-            Server.ExecuteCommand("sv_disable_teamselect_menu 1;");
+            Server.ExecuteCommand("sv_disable_teamselect_menu 1; mp_restartgame 1;");
         });
         StartRecordingGameDemo();
         UpdateGamePhase(GamePhase.MatchLive);
@@ -152,5 +152,20 @@ public class GameController(BasicFaceitServer core)
     {
         Server.ExecuteCommand($"kickid {player.UserId}");
         MyLogger.Info($"Player kicked - {player.PlayerName}");
+    }
+
+    public void PlayerJoinTeam(CCSPlayerController player, CsTeam playerTeam)
+    {
+        MyLogger.Info($"Player team - {playerTeam.ToString()}");
+
+        core.AddTimer(0.1f, () =>
+        {
+            player.ChangeTeam(CsTeam.Spectator);
+
+            if (playerTeam == CsTeam.Spectator) return;
+
+            player.Respawn();
+            core.AddTimer(0.1f, () => { player.ChangeTeam(playerTeam); });
+        });
     }
 }

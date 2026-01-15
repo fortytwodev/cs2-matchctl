@@ -1,4 +1,6 @@
 ﻿using BasicFaceitServer.GameStates;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 
 namespace BasicFaceitServer.Utils;
 
@@ -56,5 +58,35 @@ public class GameUtils(BasicFaceitServer core)
     public bool IsFriendlyFireOn()
     {
         return core.Config.IsFriendlyFireShotOn;
+    }
+
+    public CsTeam GetPlayerTeam(CCSPlayerController player)
+    {
+        MyLogger.Info("Get client team (CT, T or Spectator)");
+        var configs = core.Config;
+        var playerIp = player.IpAddress?.Split(":")[0];
+
+        if (string.IsNullOrEmpty(playerIp))
+            return CsTeam.Spectator;
+
+        var cabin = configs.Cabins.FirstOrDefault(c => c.IpAddresses.Contains(playerIp));
+        if (cabin == null)
+            return CsTeam.None;
+
+        var defaultTeam = CsTeam.Spectator;
+        switch (cabin.Side)
+        {
+            case "CT":
+                defaultTeam = CsTeam.CounterTerrorist;
+                break;
+            case "T":
+                defaultTeam = CsTeam.Terrorist;
+                break;
+            case "spectator": 
+                defaultTeam = CsTeam.Spectator;
+                break;
+        }
+
+        return defaultTeam;
     }
 }

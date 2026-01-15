@@ -59,6 +59,23 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Continue;
         }
 
+        var team = _gameUtils.GetPlayerTeam(player);
+        if (player.Team is CsTeam.Spectator or CsTeam.None)
+        {
+            MyLogger.Debug($"Player connecting first time. Assign team");
+            _gameController.PlayerJoinTeam(player, team);
+        }
+
+        var allPlayers = Utilities
+            .GetPlayers()
+            .Where(p => !p.IsHLTV && p.Team != CsTeam.Spectator && p.Team != CsTeam.None)
+            .ToList();
+        if (_gameUtils.IsPaused())
+        {
+            if (allPlayers.Count >= core.Config.MinPlayerToStart)
+                _gameController.UnpauseMatch();
+        }
+
         if (_gameUtils.IsMatchLive() || _gameUtils.IsPostWarmup())
             return HookResult.Continue;
 
