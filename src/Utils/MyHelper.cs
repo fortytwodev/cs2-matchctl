@@ -9,12 +9,18 @@ public class MyHelper(BasicFaceitServer core)
 {
     public void PrintToChatPlayer(CCSPlayerController player, string message)
     {
+        if (player.Team is CsTeam.Spectator or CsTeam.None)
+            return;
+
         var coloredText = $"{{green}}[{core.Config.Host}]{{white}}: {message}";
         player.PrintToChat(GetColoredText(coloredText));
     }
 
     public void PrintToCenterPlayer(CCSPlayerController player, string message, float delay = 0.0f)
     {
+        if (player.Team is CsTeam.Spectator or CsTeam.None)
+            return;
+
         if (delay > 0.0f)
             core.AddTimer(delay, () => player.PrintToCenter(message));
         else
@@ -24,7 +30,9 @@ public class MyHelper(BasicFaceitServer core)
     public void PrintToChatAll(string message)
     {
         var coloredText = $"{{green}}[{core.Config.Host}]{{white}}: {message}";
-        Server.PrintToChatAll(GetColoredText(coloredText));
+        var players = GetPlayers();
+        foreach (var player in players)
+            player.PrintToChat(GetColoredText(coloredText));
     }
 
     public void PrintToCenterAll(string message)
