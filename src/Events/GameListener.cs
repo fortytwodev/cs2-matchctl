@@ -31,7 +31,7 @@ public class GameListener(BasicFaceitServer core)
                     if ((int) WarmupEndTime != (int) gameRules.WarmupPeriodEnd)
                     {
                         WarmupEndTime = gameRules.WarmupPeriodEnd;
-                        LastMessageTime = DateTime.Now.AddSeconds(-(60 - (((int) WarmupTime - (int) Server.CurrentTime) % 60)*60));
+                        LastMessageTime = DateTime.Now.AddSeconds(-(60 - ((WarmupTime - (int) Server.CurrentTime) % 60)*60));
                     }
                 }
                 LastWarmupEndValueCheckTime = DateTime.Now;
@@ -49,19 +49,6 @@ public class GameListener(BasicFaceitServer core)
                 }
             }
         }
-        
-        // if (core.MatchBeingPlayedIn)
-        //     core.Helper.GetPlayers()
-        //         .ToList()
-        //         .ForEach(OnMatchBeingPlayedIn);
-    }
-
-    private void OnMatchBeingPlayedIn(CCSPlayerController player)
-    {
-        var imgPath = Path.Combine(core.ModuleDirectory, "F9jJeIw3percent.png");
-        string organizer =
-            $"<font class='fontSize-m' color='red'>Организатор турнира</font><br><img src='{imgPath}' width='64' height='64'/>";
-        player.PrintToCenterHtml($"{organizer}");
     }
 
     private void OnServerHibernationUpdate(bool isHibernating)

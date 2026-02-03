@@ -88,8 +88,6 @@ public class MyHelper(BasicFaceitServer core)
                 return;
 
             weaponEntity.Remove();
-            // player.DropActiveWeapon();
-            // Server.NextFrame(() => { weaponEntity.AddEntityIOEvent("Kill", weaponEntity, null, "", 0.1f); });
         }
         catch (Exception ex)
         {
