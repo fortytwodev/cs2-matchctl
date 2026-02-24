@@ -69,23 +69,17 @@ public class GameUtils(BasicFaceitServer core)
         if (string.IsNullOrEmpty(playerIp))
             return CsTeam.Spectator;
 
-        var cabin = configs.Cabins.FirstOrDefault(c => c.IpAddresses.Contains(playerIp));
+        var cabin = configs.IpByTeams?.FirstOrDefault(c => c.IpAddresses.Contains(playerIp));
         if (cabin == null)
             return CsTeam.None;
 
-        var defaultTeam = CsTeam.Spectator;
-        switch (cabin.Side)
+        var defaultTeam = cabin.Side switch
         {
-            case "CT":
-                defaultTeam = CsTeam.CounterTerrorist;
-                break;
-            case "T":
-                defaultTeam = CsTeam.Terrorist;
-                break;
-            case "spectator": 
-                defaultTeam = CsTeam.Spectator;
-                break;
-        }
+            "CT" => CsTeam.CounterTerrorist,
+            "T" => CsTeam.Terrorist,
+            "spectator" => CsTeam.Spectator,
+            _ => CsTeam.Spectator
+        };
 
         return defaultTeam;
     }

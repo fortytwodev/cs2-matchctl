@@ -2,21 +2,38 @@ using System.Text.Json.Serialization;
 
 namespace BasicFaceitServer.Configs;
 
-public class Cabin
+public class IpByTeam(string side, string[] addresses)
 {
-    [JsonPropertyName("name")] public string Name { get; set; }
-    [JsonPropertyName("side")] public string Side { get; set; }
-    [JsonPropertyName("ip_addresses")] public string[] IpAddresses { get; set; }
+    [JsonPropertyName("side")] public string Side { get; set; } = side;
+
+    [JsonPropertyName("ip_addresses")] public string[] IpAddresses { get; set; } = addresses;
 }
 
 public class MyConfigs
 {
     [JsonPropertyName("host")] public string Host { get; set; } = "Kings";
-    [JsonPropertyName("friendly_fire_shot")] public bool IsFriendlyFireShotOn { get; set; } = true;
+
+    [JsonPropertyName("friendly_fire_shot")]
+    public bool IsFriendlyFireShotOn { get; set; } = true;
+
     [JsonPropertyName("knife_round")] public bool KnifeRoundEnabled { get; set; } = false;
+
     [JsonPropertyName("pre_warmup_time")] public int PreWarmupTime { get; set; } = 420;
+
     [JsonPropertyName("post_warmup_time")] public int PostWarmupTime { get; set; } = 60;
-    [JsonPropertyName("min_player_to_start")] public int MinPlayerToStart { get; set; } = 10;
+
+    [JsonPropertyName("min_player_to_start")]
+    public int MinPlayerToStart { get; set; } = 10;
+
     [JsonPropertyName("record_demo")] public bool RecordGameDemo { get; set; } = true;
-    [JsonPropertyName("cabins")] public Cabin[] Cabins { get; set; } = [];
+
+    [JsonPropertyName("auto_join_team")] public bool AutoJoinTeam { get; set; } = false;
+
+    // Required to fill if auto_join_team is true. Set correct ip addresses otherwise 
+    [JsonPropertyName("ip_by_team")]
+    public IpByTeam[]? IpByTeams { get; set; } =
+    [
+        new IpByTeam("CT", ["192.168.0.104"]),
+        new IpByTeam("T", ["192.168.0.101"])
+    ];
 }
