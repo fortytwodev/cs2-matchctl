@@ -25,12 +25,10 @@ public class BasicFaceitServer : BasePlugin
     public GamePhase GamePhase = GamePhase.Sleeping;
     public MatchState MatchState = MatchState.Live;
 
-    private readonly ConfigManager _configManager;
-    public MyConfigs Config { get; private set; } = new();
+    public PluginConfig Config { get; private set; } = new();
 
     public BasicFaceitServer()
     {
-        _configManager = new ConfigManager();
         Helper = new MyHelper(this);
         GameUtils = new GameUtils(this);
         GameController = new GameController(this);
@@ -49,7 +47,7 @@ public class BasicFaceitServer : BasePlugin
             MyLogger.Warn("The plugin is hotReloaded! This might cause instability to your server");
         }
 
-        Config = _configManager.GetConfig(ModuleDirectory);
+        Config = ConfigLoader.Load(ModuleDirectory);
 
         PlayerEvents.Load();
         GameEvents.Load();

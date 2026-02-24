@@ -4,12 +4,12 @@ namespace BasicFaceitServer.Configs;
 
 public class IpByTeam(string side, string[] addresses)
 {
-    [JsonPropertyName("side")] public string Side { get; set; } = side;
+    [JsonPropertyName("side")] public string Side { get; } = side;
 
-    [JsonPropertyName("ip_addresses")] public string[] IpAddresses { get; set; } = addresses;
+    [JsonPropertyName("ip_addresses")] public string[] IpAddresses { get; } = addresses;
 }
 
-public class MyConfigs
+public class PluginConfig
 {
     [JsonPropertyName("host")] public string Host { get; set; } = "Kings";
 
@@ -30,10 +30,10 @@ public class MyConfigs
     [JsonPropertyName("auto_join_team")] public bool AutoJoinTeam { get; set; } = false;
 
     // Required to fill if auto_join_team is true. Set correct ip addresses otherwise 
-    [JsonPropertyName("ip_by_team")]
-    public IpByTeam[]? IpByTeams { get; set; } =
+    [JsonPropertyName("team_by_ip")]
+    public IpByTeam[] IpByTeams { get; } =
     [
-        new IpByTeam("CT", ["192.168.0.104"]),
-        new IpByTeam("T", ["192.168.0.101"])
+        new("CT", ["192.168.0.104"]),
+        new("T", ["192.168.0.101"])
     ];
 }
