@@ -46,11 +46,14 @@ public class PlayerEvent(BasicFaceitServer core)
             return HookResult.Continue;
         }
 
-        var team = _gameUtils.GetPlayerTeam(player);
-        if (player.Team is CsTeam.Spectator or CsTeam.None)
+        if (core.Config.AutoJoinTeam)
         {
-            MyLogger.Debug($"Player connecting first time. Assign team");
-            _gameController.PlayerJoinTeam(player, team);
+            var team = _gameUtils.GetPlayerTeam(player);
+            if (player.Team is CsTeam.Spectator or CsTeam.None)
+            {
+                MyLogger.Debug($"Player connecting first time. Assign team");
+                _gameController.PlayerJoinTeam(player, team);
+            }
         }
 
         var allPlayers = Utilities
