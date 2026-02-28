@@ -2,6 +2,7 @@
 using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
 using BasicFaceitServer.Infrastructure;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Events;
@@ -16,6 +17,7 @@ public static class PlayerEventHandler
     private static IGameInterface _gameService = PluginContext.GameService;
     private static IMatchInterface _matchService = PluginContext.MatchService;
     private static IChatInterface _chatService = PluginContext.ChatService;
+    private static IState _matchState = PluginContext.MatchStateManager;
 
     public static void Register(BasicFaceitServer plugin)
     {
@@ -60,16 +62,16 @@ public static class PlayerEventHandler
             .GetPlayers()
             .Where(p => !p.IsHLTV && p.Team != CsTeam.Spectator && p.Team != CsTeam.None)
             .ToList();
-        if (_gameService.IsPaused())
+        if (_matchState.IsPaused)
         {
             if (allPlayers.Count >= _config.MinPlayerToStart)
                 _gameService.UnpauseMatch();
         }
 
-        if (_matchService.IsMatchLive() || _matchService.IsPostWarmup())
+        if (_matchState.IsLiveMatch || _matchState.IsPostWarmup)
             return HookResult.Continue;
 
-        if (_matchService.IsKnife())
+        if (_matchState.IsKnifeRound)
         {
             _playerService.PreparePlayerForKnifeRound(player);
             return HookResult.Handled;
@@ -90,7 +92,7 @@ public static class PlayerEventHandler
             return HookResult.Continue;
         }
 
-        if (_matchService.IsKnife() || _matchService.IsMatchLive())
+        if (_matchState.IsKnifeRound || _matchState.IsLiveMatch)
         {
             if (!new[] { CsTeam.Spectator, CsTeam.None }.Contains(player.Team))
             {
@@ -116,13 +118,13 @@ public static class PlayerEventHandler
             .ToList();
         PluginLogger.Debug($"Players count - {allPlayers.Count}");
 
-        PluginLogger.Debug($"Is pre warmup: {_matchService.IsPreWarmup()}");
-        if (_matchService.IsPreWarmup() || allPlayers.Count > 0) return HookResult.Continue;
+        PluginLogger.Debug($"Is pre warmup: {_matchState.IsPreWarmup}");
+        if (_matchState.IsPreWarmup || allPlayers.Count > 0) return HookResult.Continue;
 
         PluginLogger.Debug($"First player connected - {@event.Userid.PlayerName}:{@event.Team}");
         _matchService.StartPreKnifeWarmup();
 
-        if (!_matchService.IsPreWarmup()) return HookResult.Continue;
+        if (!_matchState.IsPreWarmup) return HookResult.Continue;
 
         _chatService.PrintToChatPlayer(@event.Userid, "Oyın aldınan razminka!!!");
         _chatService.PrintToChatPlayer(@event.Userid, "RAZMINKA!!!");

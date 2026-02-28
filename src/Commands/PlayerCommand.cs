@@ -1,6 +1,7 @@
 ﻿using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
 using BasicFaceitServer.Infrastructure;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -11,6 +12,7 @@ public class PlayerCommand
 {
     private static IMatchInterface _matchService = PluginContext.MatchService;
     private static IGameInterface _gameService = PluginContext.GameService;
+    private static IState _matchState = PluginContext.MatchStateManager;
 
     public static void Register(BasicFaceitServer plugin)
     {
@@ -22,16 +24,16 @@ public class PlayerCommand
     {
         PluginLogger.Info("On command execute: !ct - Start");
 
-        if (_matchService.IsMatchLive()) return;
+        if (_matchState.IsLiveMatch) return;
 
         if (player == null || !player.IsValid) return;
 
-        var knifeWinnerTeam = _matchService.GetKnifeWinnerTeam();
+        var knifeWinnerTeam = _matchState.GetKnifeRoundWinnerTeam;
 
         PluginLogger.Debug($"On command execute: !ct - Player team: {player.Team}");
         if (player.Team != knifeWinnerTeam || player.Team == CsTeam.Spectator) return;
 
-        var gameRules = _gameService.GetGameRules();
+        var gameRules = _matchState.GetGameRules();
 
         gameRules!.SwapTeamsOnRestart = player.Team == CsTeam.Terrorist;
         gameRules.WarmupPeriod = false;
@@ -45,16 +47,16 @@ public class PlayerCommand
     {
         PluginLogger.Info($"On command execute: !t - Start");
 
-        if (_matchService.IsMatchLive()) return;
+        if (_matchState.IsLiveMatch) return;
 
         if (player == null || !player.IsValid) return;
 
-        var knifeWinnerTeam = _matchService.GetKnifeWinnerTeam();
+        var knifeWinnerTeam = _matchState.GetKnifeRoundWinnerTeam;
 
         PluginLogger.Debug($"On command execute: !t - Player team: {player.Team}");
         if (player.Team != knifeWinnerTeam || player.Team == CsTeam.Spectator) return;
 
-        var gameRules = _gameService.GetGameRules();
+        var gameRules = _matchState.GetGameRules();
 
         gameRules!.SwapTeamsOnRestart = player.Team == CsTeam.CounterTerrorist;
         gameRules.WarmupPeriod = false;

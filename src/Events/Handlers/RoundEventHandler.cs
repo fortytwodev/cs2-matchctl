@@ -2,6 +2,7 @@
 using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
 using BasicFaceitServer.Infrastructure;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 
@@ -14,6 +15,7 @@ public static class RoundEventHandler
     private static IMatchInterface _matchService = PluginContext.MatchService;
     private static IPlayerInterface _playerService = PluginContext.PlayerService;
     private static IChatInterface _chatService = PluginContext.ChatService;
+    private static IState _matchState = PluginContext.MatchStateManager;
     
     public static void Register(BasicFaceitServer plugin)
     {
@@ -25,11 +27,11 @@ public static class RoundEventHandler
     {
         PluginLogger.Info("Start");
 
-        if (_matchService.IsMatchLive()) return HookResult.Continue;
+        if (_matchState.IsLiveMatch) return HookResult.Continue;
 
         var players = _playerService.GetPlayersList();
 
-        if (_matchService.IsKnife())
+        if (_matchState.IsKnifeRound)
         {
             PluginLogger.Debug($"Knife round started. Skip team intro");
 
@@ -44,7 +46,7 @@ public static class RoundEventHandler
             _chatService.PrintToChatAll("{red}DĺQQAT!!! {green}Friendly fire qosılǵan");
             _chatService.PrintToChatAll("{green}Eger oyınshı  bilep-bilmey, pıshaq roundı yamasa janlı oyın (game) waqtında komandalasına zálel jetkerse, oyın qayta baslanbaydı (restart berilmeydi).");
         }
-        else if (_matchService.IsMatchLive() && players.Count >= _config.MinPlayerToStart)
+        else if (_matchState.IsLiveMatch && players.Count >= _config.MinPlayerToStart)
         {
             PluginLogger.Debug($"Players ({players.Count}) count is below 10. Pause the match");
             _gameService.PauseMatch();
@@ -58,14 +60,14 @@ public static class RoundEventHandler
     {
         PluginLogger.Info($"Start");
 
-        if (_matchService.IsMatchLive()) return HookResult.Continue;
+        if (_matchState.IsLiveMatch) return HookResult.Continue;
 
-        if (_matchService.IsKnife())
+        if (_matchState.IsKnifeRound)
         {
             var knifeWinner = @event.Winner == (byte) CsTeam.CounterTerrorist
                 ? CsTeam.CounterTerrorist
                 : CsTeam.Terrorist;
-            _matchService.SetKnifeWinnerTeam(knifeWinner);
+            _matchState.SetKnifeRoundWinnerTeam(knifeWinner);
             _matchService.StartPostKnifeWarmup();
         }
 

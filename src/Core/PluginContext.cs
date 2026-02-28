@@ -1,6 +1,7 @@
 ﻿using BasicFaceitServer.Configs;
 using BasicFaceitServer.Services;
 using BasicFaceitServer.Services.Interfaces;
+using BasicFaceitServer.States;
 
 namespace BasicFaceitServer.Core;
 
@@ -8,6 +9,7 @@ public static class PluginContext
 {
     private static BasicFaceitServer? _plugin;
     private static PluginConfig? _config;
+    private static MatchStateManager? _matchState;
     private static PlayerService? _playerService;
     private static GameService? _gameService;
     private static MatchService? _matchService;
@@ -19,6 +21,7 @@ public static class PluginContext
     public static IGameInterface GameService => _gameService ?? throw new InvalidOperationException("Game service not initialized");
     public static IMatchInterface MatchService => _matchService ?? throw new InvalidOperationException("Match service not initialized");
     public static IChatInterface ChatService => _chatService ?? throw new InvalidOperationException("Chat service not initialized");
+    public static IState MatchStateManager => _matchState ?? throw new InvalidOperationException("Match state not initialized");
 
     public static float WarmupStartTime { get; set; }
     public static float WarmupEndTime { get; set; }
@@ -30,6 +33,7 @@ public static class PluginContext
     {
         _plugin = plugin;
         _config = ConfigLoader.Load(moduleDirectory);
+        _matchState = new MatchStateManager();
         _playerService = new PlayerService(_plugin, _config);
         _gameService = new GameService(_plugin);
         _matchService = new MatchService(_plugin, _config);

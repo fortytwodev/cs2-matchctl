@@ -1,6 +1,7 @@
 ﻿using BasicFaceitServer.Configs;
 using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API;
 using CSSListeners = CounterStrikeSharp.API.Core.Listeners;
 
@@ -10,9 +11,8 @@ public static class TickListener
 {
     
     private static PluginConfig _config = PluginContext.Config;
-    private static IMatchInterface _matchService = PluginContext.MatchService;
-    private static IGameInterface _gameService = PluginContext.GameService;
     private static IChatInterface _chatService = PluginContext.ChatService;
+    private static IState _matchState = PluginContext.MatchStateManager;
     
     public static void Register(BasicFaceitServer plugin)
     {
@@ -22,11 +22,11 @@ public static class TickListener
     private static void OnTick()
     {
         var messageInterval = _config.WarmupMessageIntervalSeconds;
-        if (!_matchService.IsPreWarmup()) return;
+        if (!_matchState.IsPreWarmup) return;
 
         if ((DateTime.Now - PluginContext.LastWarmupEndValueCheckTime).TotalSeconds >= 1)
         {
-            var gameRules = _gameService.GetGameRules();
+            var gameRules = _matchState.GetGameRules();
             if (gameRules != null)
             {
                 if ((int) PluginContext.WarmupEndTime != (int) gameRules.WarmupPeriodEnd)

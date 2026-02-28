@@ -1,5 +1,6 @@
 ﻿using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -9,6 +10,7 @@ namespace BasicFaceitServer.Commands;
 public static class MatchCommand
 {
     private static IMatchInterface _matchService = PluginContext.MatchService;
+    private static IState _matchState = PluginContext.MatchStateManager;
 
     public static void Register(BasicFaceitServer plugin)
     {
@@ -18,7 +20,7 @@ public static class MatchCommand
 
     private static void OnGetMatchStateCommand(CCSPlayerController? player, CommandInfo commandInfo)
     {
-        commandInfo.ReplyToCommand($"Current game state: {_matchService.GetCurrentGameState()}");
+        commandInfo.ReplyToCommand($"Current game state: {_matchState.CurrentMatchState}");
     }
 
     private static void OnSetMatchStateCommand(CCSPlayerController? player, CommandInfo commandInfo)

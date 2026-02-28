@@ -1,6 +1,7 @@
 ﻿using BasicFaceitServer.Core;
 using BasicFaceitServer.Infrastructure;
 using BasicFaceitServer.Services.Interfaces;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API.Core;
 using MatchState = BasicFaceitServer.Core.MatchState;
 
@@ -9,8 +10,8 @@ namespace BasicFaceitServer.Events;
 public static class MatchEventHandler
 {
     private static IGameInterface _gameService = PluginContext.GameService;
-    private static IMatchInterface _matchService = PluginContext.MatchService;
     private static IChatInterface _chatService = PluginContext.ChatService;
+    private static IState _matchState = PluginContext.MatchStateManager;
 
     public static void Register(BasicFaceitServer plugin)
     {
@@ -28,7 +29,7 @@ public static class MatchEventHandler
 
     private static HookResult OnEventCsWinPanelMatch(EventCsWinPanelMatch @event, GameEventInfo info)
     {
-        _matchService.SetState(MatchState.Sleeping);
+        _matchState.SetMatchState(MatchState.Sleeping);
         _gameService.StopRecordingGameDemo();
         return HookResult.Continue;
     }
@@ -37,7 +38,7 @@ public static class MatchEventHandler
     {
         PluginLogger.Info("Start");
 
-        if (_matchService.IsKnife())
+        if (_matchState.IsKnifeRound)
         {
             PluginLogger.Info($"Print knife round start message to each player");
             _chatService.PrintToCenterAll("Pıshaq roundı baslandı");
@@ -46,7 +47,7 @@ public static class MatchEventHandler
             _chatService.PrintToChatAll("KNIFE!!!");
         }
 
-        if (_matchService.IsMatchLive())
+        if (_matchState.IsLiveMatch)
         {
             PluginLogger.Info($"Print Good luck message");
             _chatService.PrintToChatAll("Hámmege áwmet!!!");

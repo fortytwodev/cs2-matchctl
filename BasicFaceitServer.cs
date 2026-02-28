@@ -40,6 +40,6 @@ public class BasicFaceitServer : BasePlugin
 
     public override void Unload(bool hotReload)
     {
-        PluginContext.MatchService.SetState(MatchState.Sleeping);
+        PluginContext.MatchStateManager.SetMatchState(MatchState.Sleeping);
     }
 }

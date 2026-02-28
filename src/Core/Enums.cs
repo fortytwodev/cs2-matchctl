@@ -4,13 +4,13 @@ public enum MatchState
 {
     PreKnifeWarmup,
     PostKnifeWarmup,
-    Knife,
-    MatchLive,
+    KnifeRound,
+    LiveMatch,
     Sleeping
 }
 
 public enum GameState
 {
     Paused,
-    Live
+    Unpaused
 }

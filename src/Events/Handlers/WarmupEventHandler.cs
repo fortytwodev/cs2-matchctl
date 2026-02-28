@@ -2,6 +2,7 @@
 using BasicFaceitServer.Core;
 using BasicFaceitServer.Services.Interfaces;
 using BasicFaceitServer.Infrastructure;
+using BasicFaceitServer.States;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -14,7 +15,8 @@ public static class WarmupEventHandler
     private static IGameInterface _gameService = PluginContext.GameService;
     private static IMatchInterface _matchService = PluginContext.MatchService;
     private static IPlayerInterface _playerService = PluginContext.PlayerService;
-    private static IChatInterface _chatService = PluginContext.ChatService; 
+    private static IChatInterface _chatService = PluginContext.ChatService;
+    private static IState _matchState = PluginContext.MatchStateManager;
 
     public static void Register(BasicFaceitServer plugin)
     {
@@ -24,7 +26,7 @@ public static class WarmupEventHandler
 
     private static HookResult OnRoundAnnounceWarmup(EventRoundAnnounceWarmup @event, GameEventInfo info)
     {
-        var gameRules = _gameService.GetGameRules();
+        var gameRules = _matchState.GetGameRules();
         if (gameRules != null)
         {
             PluginContext.SetWarmupTimes(
@@ -33,7 +35,7 @@ public static class WarmupEventHandler
                 _config.WarmupMessageIntervalSeconds);
         }
         
-        if (_matchService.IsPreWarmup() || !_matchService.IsPostWarmup()) return HookResult.Continue;
+        if (_matchState.IsPreWarmup || !_matchState.IsPostWarmup) return HookResult.Continue;
 
         PluginLogger.Debug($"Post knife warmup period started");
 
@@ -42,7 +44,7 @@ public static class WarmupEventHandler
         PluginLogger.Info($"Team name 1 - {teamName1}");
         PluginLogger.Info($"Team name 2 - {teamName2}");
 
-        var knifeWinner = _matchService.GetKnifeWinnerTeam();
+        var knifeWinner = _matchState.GetKnifeRoundWinnerTeam;
         if (knifeWinner == CsTeam.None)
             return HookResult.Continue;
 
@@ -63,7 +65,7 @@ public static class WarmupEventHandler
     {
         PluginLogger.Info("Start");
 
-        if (_matchService.IsPreWarmup())
+        if (_matchState.IsPreWarmup)
         {
             PluginLogger.Info("Pre-knife warmup period ended");
 
@@ -82,7 +84,7 @@ public static class WarmupEventHandler
             return HookResult.Continue;
         }
 
-        if (_matchService.IsPostWarmup())
+        if (_matchState.IsPostWarmup)
         {
             PluginLogger.Info("Post knife warmup period ended");
             _matchService.StartMatch();
