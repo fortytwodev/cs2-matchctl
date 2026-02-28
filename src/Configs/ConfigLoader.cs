@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using BasicFaceitServer.Core;
-using BasicFaceitServer.Utils;
+using BasicFaceitServer.Infrastructure;
 
 namespace BasicFaceitServer.Configs;
 
@@ -13,12 +13,12 @@ public static class ConfigLoader
 
     public static PluginConfig Load(string moduleDirectory)
     {
-        var pluginConfigPath = Path.Combine(moduleDirectory, PluginConstants.ConfigFileName);
+        var pluginConfigPath = Path.Combine(moduleDirectory, Constants.ConfigFileName);
         try
         {
             if (!File.Exists(pluginConfigPath))
             {
-                MyLogger.Debug("Configs file does not exists, saving defaults.");
+                PluginLogger.Debug("Configs file does not exists, saving defaults.");
 
                 var defaultConfig = new PluginConfig();
                 Save(pluginConfigPath, defaultConfig);
@@ -30,16 +30,16 @@ public static class ConfigLoader
             var config = JsonSerializer.Deserialize<PluginConfig>(json);
             if (config == null)
             {
-                MyLogger.Error("Config is null. Failed to parse config, using defaults.");
+                PluginLogger.Error("Config is null. Failed to parse config, using defaults.");
                 return new PluginConfig();
             }
 
-            MyLogger.Debug("Plugin config loaded successfully!");
+            PluginLogger.Debug("Plugin config loaded successfully!");
             return config;
         }
         catch (Exception ex)
         {
-            MyLogger.Error($"Failed to parse config, using defaults: {ex.Message}");
+            PluginLogger.Error($"Failed to parse config, using defaults: {ex.Message}");
             return new PluginConfig();
         }
     }
@@ -50,11 +50,11 @@ public static class ConfigLoader
         {
             var json = JsonSerializer.Serialize(config, SerializerOptions);
             File.WriteAllText(configPath, json);
-            MyLogger.Debug("Config saved successfully!");
+            PluginLogger.Debug("Config saved successfully!");
         }
         catch (Exception ex)
         {
-            MyLogger.Error($"Exception reading config: {ex.Message}");
+            PluginLogger.Error($"Exception reading config: {ex.Message}");
         }
     }
 }

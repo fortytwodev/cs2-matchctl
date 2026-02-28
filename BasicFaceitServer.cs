@@ -1,9 +1,9 @@
 using BasicFaceitServer.Commands;
-using BasicFaceitServer.Configs;
 using BasicFaceitServer.Events;
-using BasicFaceitServer.GameStates;
-using BasicFaceitServer.Utils;
 using CounterStrikeSharp.API.Core;
+using BasicFaceitServer.Core;
+using BasicFaceitServer.Events.Listeners;
+using BasicFaceitServer.Infrastructure;
 
 namespace BasicFaceitServer;
 
@@ -14,53 +14,32 @@ public class BasicFaceitServer : BasePlugin
     public override string ModuleAuthor => "Akbar Menglimuratov";
     public override string ModuleVersion => "0.0.1";
 
-    public readonly PlayerEvent PlayerEvents;
-    public readonly GameEvent GameEvents;
-    public readonly MyHelper Helper;
-    public readonly GameController GameController;
-    public readonly MyCommands Commands;
-    public readonly GameListener GameListeners;
-    public readonly GameUtils GameUtils;
-
-    public GamePhase GamePhase = GamePhase.Sleeping;
-    public MatchState MatchState = MatchState.Live;
-
-    public PluginConfig Config { get; private set; } = new();
-
-    public BasicFaceitServer()
-    {
-        Helper = new MyHelper(this);
-        GameUtils = new GameUtils(this);
-        GameController = new GameController(this);
-        PlayerEvents = new PlayerEvent(this);
-        GameEvents = new GameEvent(this);
-        Commands = new MyCommands(this);
-        GameListeners = new GameListener(this);
-    }
-
     public override void Load(bool hotReload)
     {
-        MyLogger.Info("Start plugin load");
+        PluginLogger.Info("Start plugin load");
 
         if (hotReload)
         {
-            MyLogger.Warn("The plugin is hotReloaded! This might cause instability to your server");
+            PluginLogger.Warn("The plugin is hotReloaded! This might cause instability to your server");
         }
 
-        Config = ConfigLoader.Load(ModuleDirectory);
+        PluginContext.Initialize(this, ModuleDirectory);
+        
+        MatchEventHandler.Register(this);
+        RoundEventHandler.Register(this);
+        WarmupEventHandler.Register(this);
+        PlayerEventHandler.Register(this);
+        
+        TickListener.Register(this);
+        
+        MatchCommand.Register(this);
+        PlayerCommand.Register(this);
 
-        PlayerEvents.Load();
-        GameEvents.Load();
-        GameController.Load();
-        Commands.Load();
-        GameListeners.Load();
-
-        MyLogger.Info("End plugin load");
+        PluginLogger.Info("End plugin load");
     }
 
     public override void Unload(bool hotReload)
     {
-        PlayerEvents.Unload();
-        GamePhase = GamePhase.Sleeping;
+        PluginContext.MatchService.SetState(MatchState.Sleeping);
     }
 }

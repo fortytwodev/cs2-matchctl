@@ -1,6 +1,6 @@
-﻿namespace BasicFaceitServer.GameStates;
+﻿namespace BasicFaceitServer.Core;
 
-public enum GamePhase
+public enum MatchState
 {
     PreKnifeWarmup,
     PostKnifeWarmup,
@@ -9,7 +9,7 @@ public enum GamePhase
     Sleeping
 }
 
-public enum MatchState
+public enum GameState
 {
     Paused,
     Live
