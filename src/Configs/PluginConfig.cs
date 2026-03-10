@@ -11,7 +11,7 @@ public class IpByTeam(string side, string[] addresses)
 
 public class PluginConfig
 {
-    [JsonPropertyName("host")] public string Host { get; set; } = "Kings";
+    [JsonPropertyName("host")] public string Host { get; set; } = "CS2-Matchctl";
 
     [JsonPropertyName("friendly_fire_shot")]
     public bool IsFriendlyFireShotOn { get; set; } = true;
