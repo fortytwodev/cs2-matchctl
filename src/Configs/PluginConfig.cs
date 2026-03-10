@@ -21,6 +21,7 @@ public class PluginConfig
     [JsonPropertyName("pre_warmup_time")] public int PreWarmupTime { get; set; } = 420;
 
     [JsonPropertyName("post_warmup_time")] public int PostWarmupTime { get; set; } = 60;
+    [JsonPropertyName("warmup_message_interval_seconds")] public int WarmupMessageIntervalSeconds { get; set; } = 60;
 
     [JsonPropertyName("min_player_to_start")]
     public int MinPlayerToStart { get; set; } = 10;
