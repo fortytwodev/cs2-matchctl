@@ -24,7 +24,7 @@ public class ChatService : IChatInterface
         if (player.Team is CsTeam.Spectator or CsTeam.None)
             return;
 
-        var coloredText = $"{{green}}[{_config.Host}]{{white}}: {message}";
+        var coloredText = $"{{red}}[{_config.Host}]{{white}}: {message}";
         player.PrintToChat(GetColoredText(coloredText));
     }
 
@@ -41,7 +41,7 @@ public class ChatService : IChatInterface
     
     public void PrintToChatAll(string message)
     {
-        var coloredText = $"{{green}}[{_config.Host}]{{white}}: {message}";
+        var coloredText = $"{{red}}[{_config.Host}]{{white}}: {message}";
         var players = _playerService.GetPlayersList();
         foreach (var player in players)
             player.PrintToChat(GetColoredText(coloredText));
@@ -55,13 +55,13 @@ public class ChatService : IChatInterface
     }
     
     // TODO: Make or move to other class
-    private static readonly Dictionary<string, char> ColorMap = new()
+    private static Dictionary<string, char> ColorMap = new()
     {
         { "default", (char)1 },
         { "white", (char)1 },
         { "darkred", (char)2 },
         { "purple", (char)3 },
-        { "green", (char)3 },
+        { "green", (char)4 },
         { "lightgreen", (char)5 },
         { "slimegreen", (char)6 },
         { "red", (char)7 },
@@ -81,9 +81,9 @@ public class ChatService : IChatInterface
         const string pattern = "{(\\w+)}";
         var replaced = Regex.Replace(message, pattern, match =>
         {
-            var colorCode = match.Groups[1].Value;
-            return ColorMap.TryGetValue("{" + colorCode + "}", out var replacement)
-                ? Convert.ToChar(replacement).ToString()
+            var colorName = match.Groups[1].Value.ToLowerInvariant();
+            return ColorMap.TryGetValue(colorName, out var colorChar)
+                ? colorChar.ToString()
                 : match.Value;
         });
 
