@@ -81,7 +81,7 @@ public class MatchService : IMatchInterface
     public void StartMatch()
     {
         PluginLogger.Info("Start live match");
-        PluginLogger.Info("Exec gamemode_competitive, restart game (1 sec)");
+        PluginLogger.Info("Exec matchctl_live, restart game (1 sec)");
 
         if (_matchState.IsWarmup())
         {
@@ -89,8 +89,11 @@ public class MatchService : IMatchInterface
             gameRules!.WarmupPeriod = false;
         }
 
-        Server.ExecuteCommand("exec gamemode_competitive;");
-        _plugin.AddTimer(1.0f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 1; mp_restartgame 1;"); });
+        Server.ExecuteCommand("exec matchctl_live;");
+        _plugin.AddTimer(1.0f, () =>
+        {
+            Server.ExecuteCommand("sv_disable_teamselect_menu 1; mp_restartgame 1;");
+        });
         _gameService.StartRecordingGameDemo();
         _matchState.SetMatchState(MatchState.LiveMatch);
     }
