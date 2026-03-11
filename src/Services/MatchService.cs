@@ -32,8 +32,7 @@ public class MatchService : IMatchInterface
             $"mp_warmup_items_drop_policy 0",
             $"mp_warmup_items_nocost 1",
             $"mp_warmup_items_nocount_policy 1",
-            $"mp_warmup_start",
-            $"sv_disable_teamselect_menu 1"
+            $"mp_warmup_start"
         ];
 
         PluginLogger.Debug($"Pre knife warmup time: {_config.PreWarmupTime}");
