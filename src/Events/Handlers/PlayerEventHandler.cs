@@ -12,6 +12,7 @@ namespace BasicFaceitServer.Events;
 
 public static class PlayerEventHandler
 {
+    private static BasicFaceitServer _plugin;
     private static IPlayerInterface _playerService = PluginContext.PlayerService;
     private static PluginConfig _config = PluginContext.Config;
     private static IGameInterface _gameService = PluginContext.GameService;
@@ -21,6 +22,7 @@ public static class PlayerEventHandler
 
     public static void Register(BasicFaceitServer plugin)
     {
+        _plugin = plugin;
         plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         plugin.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         plugin.RegisterEventHandler<EventPlayerTeam>(OnEventPlayerTeam);
@@ -56,6 +58,14 @@ public static class PlayerEventHandler
                 PluginLogger.Debug($"Player connecting first time. Assign team");
                 _playerService.PlayerJoinTeam(player, team);
             }
+        }
+        else
+        {
+            PluginLogger.Debug("Auto join disabled. Allow players select their team");
+            Server.NextFrame(() =>
+            {
+                Server.ExecuteCommand("sv_disable_teamselect_menu 0");
+            }); 
         }
 
         var allPlayers = Utilities
