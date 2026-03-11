@@ -35,6 +35,8 @@ public class BasicFaceitServer : BasePlugin
         MatchCommand.Register(this);
         PlayerCommand.Register(this);
 
+        PluginContext.ExecBaseCfgFile();
+
         PluginLogger.Info("End plugin load");
     }
 
