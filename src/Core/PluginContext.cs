@@ -1,7 +1,9 @@
-﻿using BasicFaceitServer.Configs;
+﻿using System.Reflection;
+using BasicFaceitServer.Configs;
 using BasicFaceitServer.Services;
 using BasicFaceitServer.Services.Interfaces;
 using BasicFaceitServer.States;
+using CounterStrikeSharp.API;
 
 namespace BasicFaceitServer.Core;
 
@@ -47,5 +49,25 @@ public static class PluginContext
         WarmupTime = warmupTime;
         LastMessageTime = DateTime.Now.AddSeconds(-Config.WarmupMessageIntervalSeconds);
         LastWarmupEndValueCheckTime = DateTime.Now;
+    }
+
+    public static void ExecBaseCfgFile()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = "BasicFaceitServer.src.Core.GameCfg.matchctl_live.cfg";
+        var cfgPath = Path.Combine(Server.GameDirectory, "csgo", "cfg", "matchctl_live.cfg");
+
+        if (!File.Exists(cfgPath))
+        {
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var fileStream = File.Create(cfgPath);
+            stream?.CopyTo(fileStream);
+        }
+
+        Server.ExecuteCommand("exec gamemode_competitive");
+        Server.NextFrame(() =>
+        {
+            Server.ExecuteCommand("exec matchctl_live");
+        });
     }
 }

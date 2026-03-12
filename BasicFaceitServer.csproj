@@ -15,5 +15,8 @@
     <ItemGroup>
         <PackageReference Include="CounterStrikeSharp.API" Version="1.0.342" />
     </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="src\Core\GameCfg\matchctl_live.cfg" />
+    </ItemGroup>
 
 </Project>
